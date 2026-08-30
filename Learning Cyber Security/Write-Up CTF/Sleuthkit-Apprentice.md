@@ -4,7 +4,9 @@ Okey teman-teman, kali ini saya akan menuliskan write up tentang Challenge `Fore
 
 Jadi pertama kita lihat dulu deskripsi dan juga file dari soalnya :
 
-![alt text](<image/Screenshot 2026-08-29 at 10-34-28 CyLab Security Academy - Forensics in CTF's(1).png>)
+`Download this disk image and find the flag.
+Note: if you are using the webshell, download and extract the disk image into /tmp not your home directory.
+Download compressed disk image`
 
 Disini kita bisa lihat bahwa ada deskripsi untuk `Download Disk Image` dan `Find the flag`. Oke jadi karena disini awalnya saya bingung dan saya challenge untuk mengerjakan tanpa bantuan cara apapun, hanya mencari tools. Jadi saya sudah mencoba banyak cara.
 
@@ -35,8 +37,30 @@ Nah setelah kalian cari-cari filenya, dan kalian menyerah maka kalian bisa melih
 
 Cari kebagian root nya :
 
-![alt text](image/Screenshot_2026-08-29_10_34_01(1)(1).png)
-
+```bash
+(kali@kali)-[~] $ fls -o 0000360448 disk.flag.img
+d/d 451: home
+d/d 11: lost+found
+d/d 12: boot
+d/d 1985: etc
+d/d 1986: proc
+d/d 1987: dev
+d/d 1988: tmp
+d/d 1989: lib
+d/d 1990: var
+d/d 3969: usr
+d/d 3970: bin
+d/d 1991: sbin
+d/d 1992: media
+d/d 1993: mnt
+d/d 1994: opt
+d/d 1995: root
+d/d 1996: run
+d/d 1997: srv
+d/d 1998: sys
+d/d 2358: swap
+V/V 31745: $OrphanFiles
+```
 Cara mencarinya gimana? perhatikan inode (Seperti ID direktori/file) disamping tipenya yang d/d yaitu `1995`:
 
 Formatnya :
@@ -53,22 +77,43 @@ Nah fungsi dari optionnya saya jelasin singkat aja :
 
 Dan akan muncul output seperti ini :
 
-![alt text](<image/root nya.png>)
+```bash
+(kali@kali)-[~] $ fls -r -o 0000360448 disk.flag.img 1995
+r/r 2363: .ash_history
+d/d 3981: my_folder
+```
 
 Nah disitu ada hal yang mencurigakan, yaitu file dengan nama .ash_history dan mari kita coba lihat isinya, disini saya `icat` aja filenya karena belum terlalu sepuh untuk melihat dengan trik lain. Disini inode-nya kita ganti dengan inode dari ash_history tersebut.
 ```bash
 $icat -o 0000360448 disk.flag.img 2363
 ```
-![alt text](image/icat.png)
-
+```bash
+(kali@kali)-[~] $ icat -o 0000360448 disk.flag.img 2363
+apk add nano
+mkdir my_folder
+cd my_folder/
+nano flag.txt
+ls -al
+iconv -f asciit utf16 > flag.uni.txt
+l
+ls -al
+iconv -f asciit utf16 flag.txt > flag.uni.txt
+ls -al
+shred
+shred-zu flag.txt
+ls -al
+halt
+```
 Nah, bisa kita perhatikan isi filenya itu historynya adalah add nano lalu ganti direktori ke my_folder, lalu melakukan command di nano setelah itu melakukan convert dan outputnya dimasukkan ke file `flag.uni.txt`.
 
 Kemudian, disini kita bisa cek aja langsung file itu, dengan 
 ```bash
 $fls -r -o 0000360448 disk.flag.img | grep "flag.uni.txt"
 ```
-![alt text](image/flaguni.png)
-
+```bash
+(kali@kali)-[~] $ fLs -r -o 0000360448 disk.flag.img | grep "flag.uni.txt"
+++r/r 2371: flag.uni.txt
+```
 Nah, bisa kita perhatikan disini kenapa saya grep? karena saya mau ambil nama file yang ada di partisi image ini yang memiliki nama tersebut, dan ternyata ada. Langsung aja kita `icat` dan masukin inode-nya dari `flag.uni.txt`.
 ```bash
 $icat -o 0000360448 disk.flag.img 2371
@@ -78,4 +123,4 @@ Nah selesai deh, kalian bisa dapetin flagnya.
 
 
 ### Segitu aja guys untuk write-up nya, terimakasih dan mohon maaf apabila ada salah kata/tools/penamaan dari saya. Sekian...
-Dan untuk bisa mengerjakan ini juga tidak tiba-tiba ya guyss, di challenge sebelumnya saya mencari bantuan dan disini karena saya sudah mulai paham makanya saya coba challenge sendiri. Maaf kalau bahasanya masih ada yang kurang.
+Dan untuk bisa mengerjakan ini juga tidak tiba-tiba ya guyss, di challenge sebelumnya saya mencari bantuan dan disini karena saya sudah mulai paham makanya saya coba challenge sendiri. Maaf kalau bahasanya masih ada yang kurang dan mohon maaf karena gabisa memakai gambar, karena sedikit berantakan kalau diupload.
